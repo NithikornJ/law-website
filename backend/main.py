@@ -292,4 +292,6 @@ async def root():
 # รัน FastAPI Server
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    port = int(os.getenv("PORT", 8000))  # ใช้ PORT จาก environment variable หรือ 8000 ถ้าไม่มี
+    uvicorn.run(app, host="0.0.0.0", port=port)
