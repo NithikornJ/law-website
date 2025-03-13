@@ -19,7 +19,7 @@ class RatingRequest(BaseModel):
 # ตั้งค่า CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # อนุญาตให้ทุกโดเมนเข้าถึง
+    allow_origins=["https://law-website-xwxu.onrender.com"],  # * อนุญาตให้ทุกโดเมนเข้าถึง
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
