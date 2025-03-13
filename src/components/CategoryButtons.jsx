@@ -296,7 +296,7 @@ export default function CategoryButtons() {
               className="relative inline-flex items-center justify-center p-0.5 overflow-hidden text-sm font-bold text-white rounded-lg group bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:bg-gradient-to-br hover:ring-2 hover:ring-white focus:ring-4 focus:outline-none focus:ring-red-300 aspect-square w-full"
               onClick={() => setSelectedCategory(category)}
               >
-                <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white bg-opacity-0 rounded-md group-hover:bg-opacity-0 w-full flex items-center justify-center">
+                <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white bg-opacity-0 rounded-md group-hover:bg-opacity-0 w-full flex items-center justify-center text-lg">
                   {category.name}
                 </span>
               </button>

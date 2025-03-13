@@ -15,6 +15,7 @@ const App = () => {
     const [selectedCase, setSelectedCase] = useState(null);
     const [categories, setCategories] = useState([]); // เพิ่ม state สำหรับเก็บข้อมูลหมวดหมู่
     const [searchQuery, setSearchQuery] = useState(""); // เพิ่ม State สำหรับเก็บ searchQuery
+    const [isLoading, setIsLoading] = useState(false);
 
     // ดึงข้อมูลหมวดหมู่จาก API
     const fetchCategories = async () => {
@@ -46,6 +47,7 @@ const App = () => {
 
     // ฟังก์ชันสำหรับเรียกใช้ API เพื่อค้นหาคดีที่คล้ายกัน
     const fetchResults = async (query = "") => {
+        setIsLoading(true);
         try {
             // เรียกใช้ API ที่คุณสร้างไว้ใน main.py
             const response = await fetch(`${process.env.REACT_APP_API_URL}/search_cases/`, {
@@ -90,6 +92,8 @@ const App = () => {
             setResults(filteredResults);
         } catch (error) {
             console.error("Error fetching results:", error);
+        } finally {
+            setIsLoading(false); // ตั้งค่า isLoading เป็น false เมื่อโหลดข้อมูลเสร็จสิ้น
         }
     };
 
@@ -133,7 +137,7 @@ const App = () => {
                             
                             {/* ✅ Results ใช้พื้นที่ 3/4 */}
                             <div className="w-3/4 bg-white p-4 rounded-lg">
-                                <Results results={results} onSelectCase={handleSelectCase} />
+                                <Results results={results} onSelectCase={handleSelectCase} isLoading={isLoading} />
                             </div>
                         </div>
                     </>
