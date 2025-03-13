@@ -4,6 +4,7 @@ import psycopg2
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from pydantic import BaseModel
+import os
 
 # สร้าง FastAPI app
 app = FastAPI()
@@ -31,11 +32,11 @@ model = SentenceTransformer("Pornpan/sentenbert_finetuning_for_law")
 def get_db_connection():
     try:
         conn = psycopg2.connect(
-            host="dpg-cv2bao9u0jms738s7sag-a.singapore-postgres.render.com",
-            port=5432,
-            user="law_database_kjz4_user",
-            password="lxwsLau6X6QzsdL4UjPmg4bLPXeRaa2C",
-            database="law_database_kjz4"
+            host=os.getenv("DB_HOST"),  # ใช้ environment variable
+            port=os.getenv("DB_PORT"),  # ใช้ environment variable
+            user=os.getenv("DB_USER"),  # ใช้ environment variable
+            password=os.getenv("DB_PASSWORD"),  # ใช้ environment variable
+            database=os.getenv("DB_NAME")  # ใช้ environment variable
         )
         return conn
     except psycopg2.Error as e:
