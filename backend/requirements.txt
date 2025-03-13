@@ -4,4 +4,3 @@ psycopg2
 numpy
 sentence-transformers
 pydantic
-os
