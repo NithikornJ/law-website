@@ -12,7 +12,7 @@ const CaseDetail = ({ caseData, onBack }) => {
     useEffect(() => {
         const fetchCaseDetails = async () => {
             try {
-                const response = await fetch(`http://127.0.0.1:8000/get_case_details/?case_id=${caseData.id}`);
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/get_case_details/?case_id=${caseData.id}`);
                 if (!response.ok) {
                     throw new Error("Network response was not ok");
                 }
@@ -33,7 +33,7 @@ const CaseDetail = ({ caseData, onBack }) => {
 
     const submitRating = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/submit_rating/", {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/submit_rating/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

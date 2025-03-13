@@ -19,7 +19,7 @@ const App = () => {
     // ดึงข้อมูลหมวดหมู่จาก API
     const fetchCategories = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/get_categories/");
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/get_categories/`);
             if (!response.ok) {
                 throw new Error("Failed to fetch categories");
             }
@@ -32,7 +32,7 @@ const App = () => {
 
     const fetchAverageRatings = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/get_average_ratings/");
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/get_average_ratings/`);
             if (!response.ok) {
                 throw new Error("Failed to fetch average ratings");
             }
@@ -48,7 +48,7 @@ const App = () => {
     const fetchResults = async (query = "") => {
         try {
             // เรียกใช้ API ที่คุณสร้างไว้ใน main.py
-            const response = await fetch("http://127.0.0.1:8000/search_cases/", {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/search_cases/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
