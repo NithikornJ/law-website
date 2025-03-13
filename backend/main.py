@@ -1,175 +1,98 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from database import get_database_connection
-from sbert_model import get_similarity
-from pydantic import BaseModel, Field
+import psycopg2
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from pydantic import BaseModel
 
+# สร้าง FastAPI app
 app = FastAPI()
 
-# CORS Configuration
-origins = [
-    "http://localhost:3000",  # React Frontend
-    "http://127.0.0.1:3000",
-]
+# ตั้งค่า CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # อนุญาตให้ทุกโดเมนเข้าถึง
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class CaseInput(BaseModel):
-    decision_number: str
-    short_brief: str
-    long_brief: str
-    Source: str
-    case_number: str = Field(
-        ...,
-        pattern=r"^(ดำ|แดง)",  # ไม่จำกัดความยาว และรองรับอักษรพิเศษ
-        description="รูปแบบ: ไม่จำกัดความยาวของข้อความ และสามารถมีอักษรพิเศษได้"
-    )
+# โหลดโมเดล Sentence-BERT
+model = SentenceTransformer("Pornpan/sentenbert_finetuning_for_law")
 
-@app.post("/add_case")
-def add_case(case: CaseInput):
+# ฟังก์ชันเชื่อมต่อฐานข้อมูล
+def get_db_connection():
+    try:
+        conn = psycopg2.connect(
+            host="dpg-cv2bao9u0jms738s7sag-a.singapore-postgres.render.com",
+            port=5432,
+            user="law_database_kjz4_user",
+            password="lxwsLau6X6QzsdL4UjPmg4bLPXeRaa2C",
+            database="law_database_kjz4"
+        )
+        return conn
+    except psycopg2.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
+
+# ข้อมูลที่รับเข้ามาจากผู้ใช้
+class SearchRequest(BaseModel):
+    user_input: str
+
+# Endpoint สำหรับค้นหาคดีที่คล้ายกัน
+@app.post("/search_cases/")
+async def search_cases(request: SearchRequest):
     try:
         # เชื่อมต่อฐานข้อมูล
-        conn = get_database_connection()
-        if not conn:
-            raise HTTPException(status_code=500, detail="เชื่อมต่อฐานข้อมูลไม่สำเร็จ")
-        
+        conn = get_db_connection()
         cursor = conn.cursor()
 
-        # เพิ่มข้อมูลลงในตาราง
+        # แปลงข้อความเป็นเวกเตอร์
+        query_embedding = model.encode(request.user_input).astype(np.float32).tolist()
+
+        # ค้นหา 10 คดีที่คล้ายที่สุดโดยใช้ Cosine Similarity
         sql = """
-            INSERT INTO lawinfo150 (decision_number, short_brief, long_brief, Source, case_number)
-            VALUES (%s, %s, %s, %s, %s)
+        SELECT c.case_id, c.case_text, c.category_id, 1 - (c.case_embedding <=> CAST(%s AS vector(512))) AS similarity
+        FROM cases c
+        ORDER BY similarity DESC
+        LIMIT 10;
         """
-        values = (case.decision_number, case.short_brief, case.long_brief, case.Source, case.case_number)
-        cursor.execute(sql, values)
-        conn.commit()
+        cursor.execute(sql, (query_embedding,))  # ใช้ CAST ให้เป็น vector(512)
+
+        # ดึงผลลัพธ์
+        results = cursor.fetchall()
+
+        # ดึงข้อมูลหมวดหมู่จากฐานข้อมูล
+        cursor.execute("SELECT category_id, category_name FROM categories")
+        categories = cursor.fetchall()
+        category_dict = {cat[0]: cat[1] for cat in categories}  # สร้าง dictionary ของ category_id และ category_name
+
+        # จัดรูปแบบข้อมูลส่งกลับ
+        case_list = [
+            {
+                "rank": rank,
+                "case_id": case_id,
+                "case_text": case_text[:200] + "...",  # ตัดข้อความให้ไม่เกิน 200 ตัวอักษร
+                "category": category_dict.get(category_id, "ไม่ระบุหมวดหมู่"),
+                "similarity": round(similarity, 4),
+            }
+            for rank, (case_id, case_text, category_id, similarity) in enumerate(results, start=1)
+        ]
 
         # ปิดการเชื่อมต่อ
         cursor.close()
         conn.close()
 
-        return {
-            "message": "เพิ่มคดีสำเร็จ!",
-            "decision_number": case.decision_number,
-            "short_brief": case.short_brief,
-            "long_brief": case.long_brief,
-            "Source": case.Source,
-            "case_number": case.case_number,
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"ข้อผิดพลาดในฐานข้อมูล: {str(e)}")
-
-@app.get("/search")
-async def search_data(query: str):
-    try:
-        # เชื่อมต่อกับฐานข้อมูล
-        cnx = get_database_connection()
-        if cnx is None:
-            return {"error": "Failed to connect to the database"}
-        
-        cursor = cnx.cursor()
-        cursor.execute("SELECT id, decision_number, short_brief, long_brief, Source, case_number FROM lawinfo150")  
-        rows = cursor.fetchall()
-
-        if not rows:
-            return {"error": "No data found"}
-
-        # ดึงคำอธิบายจากฐานข้อมูลจากคอลัมน์ short_brief (คอลัมน์ที่ 3)
-        descriptions = [row[2] for row in rows]
-
-        # คำนวณความคล้ายคลึงของ query กับ short_brief
-        similarities = get_similarity(query, descriptions)
-
-        if similarities is None:
-            return {"error": "Failed to compute similarity"}
-
-        # แปลง similarity ให้เป็น float 
-        similarities = [float(sim) for sim in similarities]
-
-        # รวมข้อมูล id, short_brief และ similarity
-        job_scores = [
-            {
-                "id": rows[i][0],
-                "decision_number": rows[i][1],
-                "short_brief": rows[i][2],
-                "long_brief": rows[i][3],
-                "similarity": similarities[i],
-            }
-            for i in range(len(rows))
-        ]
-        
-        # เรียงลำดับจากคล้ายคลึงมากที่สุด
-        sorted_jobs = sorted(job_scores, key=lambda x: x['similarity'], reverse=True)
-
-        # ส่งผลลัพธ์ 10 งานที่คล้ายที่สุด
-        return {"results": sorted_jobs[:10]}
+        return {"message": "ค้นหาสำเร็จ", "cases": case_list}
 
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=f"เกิดข้อผิดพลาด: {str(e)}")
 
-    finally:
-        if cnx:
-            cnx.close()  # ปิดการเชื่อมต่อ
+# Endpoint สำหรับตรวจสอบสถานะ API
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Law Case Search API"}
 
-
-class WebsiteRating(BaseModel):
-    rating: int = Field(..., ge=1, le=5)  # รับคะแนนระหว่าง 1 ถึง 5 เท่านั้น
-
-# Model สำหรับรับข้อมูลการให้คะแนนจากผู้ใช้
-class UserRatingInput(BaseModel):
-    search_query: str  # ข้อความที่ผู้ใช้ค้นหา
-    case_id: int       # รหัสของคดี
-    rate: int 
-
-@app.post("/rate-case/")
-def rate_case(rating: UserRatingInput):
-    conn = get_database_connection()
-    cursor = conn.cursor()
-
-    try:
-        print("Received Data:", rating.dict())
-        # บันทึกข้อมูลลงในตาราง user_ratings
-        cursor.execute(
-            "INSERT INTO user_ratings (search_query, case_id, rate) VALUES (%s, %s, %s)",
-            (rating.search_query, rating.case_id, rating.rate)
-        )
-        conn.commit()
-    except Exception as e:
-        print("Database Error:", str(e))
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    finally:
-        conn.close()
-
-    return {"message": "Rating submitted successfully"}
-
-# API สำหรับดูคะแนนเฉลี่ยของแต่ละคดี
-@app.get("/case/{case_id}/average-rating/")
-def get_case_average_rating(case_id: int):
-    conn = get_database_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    try:
-        # คำนวณคะแนนเฉลี่ยของคดีที่ระบุ
-        cursor.execute(
-            "SELECT AVG(rate) AS average_rate, COUNT(*) AS total_ratings FROM user_ratings WHERE case_id = %s",
-            (case_id,)
-        )
-        result = cursor.fetchone()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    finally:
-        conn.close()
-
-    if not result or result["total_ratings"] == 0:
-        raise HTTPException(status_code=404, detail="No ratings found for this case")
-
-    return {
-        "case_id": case_id,
-        "average_rate": result["average_rate"],
-        "total_ratings": result["total_ratings"],
-    }
+# รัน FastAPI Server
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
