@@ -288,52 +288,52 @@ export default function CategoryButtons() {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   return (
-        <div className="w-[10%] min-w-[120px]"> {/* กำหนดความกว้าง 10-15% และความกว้างขั้นต่ำ */}
-          <div className="flex flex-col gap-4">
-            {categories.map((category, index) => (
-              <button
-              key={index}
-              className="relative inline-flex items-center justify-center p-0.5 overflow-hidden text-sm font-bold text-white rounded-lg group bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:bg-gradient-to-br hover:ring-2 hover:ring-white focus:ring-4 focus:outline-none focus:ring-red-300 aspect-square w-full"
-              onClick={() => setSelectedCategory(category)}
-              >
-                <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white bg-opacity-0 rounded-md group-hover:bg-opacity-0 w-full flex items-center justify-center text-lg">
-                  {category.name}
-                </span>
-              </button>
-            ))}
-        </div>        
-       
+    <div className="w-full sm:w-[10%] sm:min-w-[120px]">
+      <div className="flex flex-row sm:flex-col gap-2 sm:gap-4">
+        {categories.map((category, index) => (
+          <button
+            key={index}
+            className="relative inline-flex items-center justify-center p-2 sm:p-0.5 overflow-hidden text-sm sm:text-lg font-bold text-white rounded-lg group bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:bg-gradient-to-br hover:ring-2 hover:ring-white focus:ring-4 focus:outline-none focus:ring-red-300 aspect-auto sm:aspect-square w-full"
+            onClick={() => setSelectedCategory(category)}
+          >
+            <span className="relative px-3 sm:px-5 py-2 sm:py-2.5 transition-all ease-in duration-75 bg-white bg-opacity-0 rounded-md group-hover:bg-opacity-0 w-full flex items-center justify-center">
+              {category.name}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* Popup แสดงข้อมูล */}
       {selectedCategory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-3/4 max-w-4xl h-auto">
-            <h1 className="text-2xl font-bold mb-4">
+          <div className="bg-white p-4 sm:p-8 rounded-lg shadow-lg w-full sm:w-3/4 max-w-4xl max-h-[90vh] overflow-y-auto relative">
+            {/* ปุ่มปิด */}
+            <button
+              className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white font-bold w-10 h-10 rounded-full flex items-center justify-center"
+              onClick={() => setSelectedCategory(null)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* เนื้อหาป๊อปอัพ */}
+            <h1 className="text-lg sm:text-2xl font-bold mb-4">
               {selectedCategory.title}
             </h1>
             <div className="text-gray-700 space-y-4">
               {selectedCategory.description}
-            </div>
-            {/* ปุ่มปิด popup */}
-            <div className="flex justify-center mt-8">
-              <button
-                className="bg-red-500 hover:bg-red-700 text-white font-bold w-10 h-10 rounded-full flex items-center justify-center"
-                onClick={() => setSelectedCategory(null)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
             </div>
           </div>
         </div>

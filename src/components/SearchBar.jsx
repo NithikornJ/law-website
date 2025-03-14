@@ -19,7 +19,7 @@ const SearchBar = ({ onSearch }) => {
     return (
         <div className="bg-gray-100 py-6">
             <div className="container mx-auto flex justify-center items-center">
-                <div className="relative w-4/5 max-w-6xl">
+                <div className="relative w-full sm:w-4/5 sm:max-w-6xl">
                     {/* Input Field */}
                     <input
                         type="text"

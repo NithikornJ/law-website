@@ -121,24 +121,40 @@ const App = () => {
         setSelectedCase(null);
     };
 
+    const updateResultsWithNewRatings = (newAverageRatings) => {
+        setResults((prevResults) =>
+            prevResults.map((result) => ({
+                ...result,
+                rating: newAverageRatings[result.id] || result.rating, // อัปเดต rating ตามข้อมูลใหม่
+            }))
+        );
+    };
+
     return (
-        <div className="flex flex-col min-h-screen bg-gray-100">
+        <div className="flex flex-col min-h-screen bg-gray-100 overflow-x-hidden">
             <Header />
             <div className="flex-1 container mx-auto p-4">
                 {selectedCase ? (
-                    <CaseDetail caseData={selectedCase} onBack={handleBack} />
+                    <CaseDetail 
+                    caseData={selectedCase} 
+                    onBack={handleBack} 
+                    fetchAverageRatings={fetchAverageRatings}
+                    updateResultsWithNewRatings={updateResultsWithNewRatings} // ส่งฟังก์ชันไปยัง CaseDetail
+                />
                 ) : (
                     <>
                         {/* ส่งฟังก์ชัน fetchResults และ setSearchQuery ไปยัง SearchBar */}
                         <SearchBar onSearch={(query) => { setSearchQuery(query); fetchResults(query); }} />
-                        <div className="flex gap-4 mt-4">
-                            {/* ✅ เพิ่ม CategoryButtons ทางซ้าย */}
+                        <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                        {/* CategoryButtons */}
+                        <div className="w-full sm:w-[10%] sm:min-w-[120px]">
                             <CategoryButtons />
-                            
-                            {/* ✅ Results ใช้พื้นที่ 3/4 */}
-                            <div className="w-3/4 bg-white p-4 rounded-lg">
-                                <Results results={results} onSelectCase={handleSelectCase} isLoading={isLoading} />
-                            </div>
+                        </div>
+
+                        {/* Results */}
+                        <div className="w-full sm:w-3/4 bg-white p-4 rounded-lg">
+                            <Results results={results} onSelectCase={handleSelectCase} isLoading={isLoading} />
+                        </div>
                         </div>
                     </>
                 )}

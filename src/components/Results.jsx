@@ -29,7 +29,7 @@ const Results = ({ results, onLoadMore, onSelectCase, isLoading }) => {
                     {results.map((result) => (
                         <div
                             key={result.id}
-                            className="mb-6 p-6 border-2 border-gray-300 rounded-xl shadow-lg hover:shadow-xl transition-shadow flex items-start gap-4 bg-white"
+                            className="mb-6 p-6 border-2 border-gray-300 rounded-xl shadow-lg hover:shadow-xl transition-shadow flex flex-col sm:flex-row items-start gap-4 bg-white"
                         >
                             <img
                                 src={result.icon}
@@ -42,7 +42,7 @@ const Results = ({ results, onLoadMore, onSelectCase, isLoading }) => {
                             <div className="flex-grow">
                                 <h3 className="font-bold text-lg text-gray-900 mb-2">{result.title}</h3>
                                 <p className="text-gray-700 mb-2">{result.description}</p>
-                                <div className="flex items-center gap-2 mt-2">
+                                <div className="flex flex-wrap items-center gap-2 mt-2">
                                     <span className="bg-gray-200 text-gray-800 text-sm px-3 py-1 rounded-lg">{result.category}</span>
                                     <span className="text-sm text-gray-600">📚 {result.law}</span>
                                     <span className="text-sm text-gray-600">🔍 ค่าความคล้ายคลึง: {result.similarity.toFixed(4)}/1</span>

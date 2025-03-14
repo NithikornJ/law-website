@@ -14,8 +14,8 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white p-4 shadow-md rounded-b-[30px] relative z-10">
-      <div className="container mx-auto flex justify-between items-center">
+    <header className="bg-white p-4 shadow-md rounded-b-[30px] relative z-10 overflow-hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-center">
         {/* Left Section: Menu Icon and Logo */}
         <div className="flex items-center space-x-2">
           {/* Left Menu Icon */}
@@ -31,7 +31,7 @@ const Header = () => {
         </div>
 
         {/* Right Section: Icons */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 mt-4 sm:mt-0">
           {/* Book Icon */}
           <button className="p-2 rounded-full hover:bg-gray-200" onClick={handleBookClick}>
             <FaBook className="text-gray-700 text-xl" />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const CaseDetail = ({ caseData, onBack }) => {
+const CaseDetail = ({ caseData, onBack, fetchAverageRatings, updateResultsWithNewRatings }) => {
     const [rating, setRating] = useState(4);
     const [loading, setLoading] = useState(true);
     const [fullCaseText, setFullCaseText] = useState("");
@@ -52,6 +52,9 @@ const CaseDetail = ({ caseData, onBack }) => {
             const data = await response.json();
             console.log("Rating submitted successfully:", data);
 
+            const newAverageRatings = await fetchAverageRatings();
+            updateResultsWithNewRatings(newAverageRatings);
+
             setPopupMessage("ส่งคะแนนสำเร็จ!");
             setPopupType("success");
             setShowPopup(true);
@@ -88,14 +91,14 @@ const CaseDetail = ({ caseData, onBack }) => {
             ) : (
                 <div className="space-y-4">
                     <div className="bg-white p-4 rounded-xl shadow-md border border-gray-300">
-                        <div className="flex items-center">
+                        <div className="flex flex-col sm:flex-row items-center">
                             <label className="font-bold text-gray-700 mr-2">เลขที่ฎีกา :</label>
                             <p className="text-gray-700">{caseData?.id || "-"}</p>
                         </div>
                     </div>
 
                     <div className="bg-white p-4 rounded-xl shadow-md border border-gray-300">
-                        <div className="flex items-center">
+                        <div className="flex flex-col sm:flex-row items-center">
                             <label className="font-bold text-gray-700 mr-2">กฎหมายแพ่งและพาณิชย์ :</label>
                             <p className="text-gray-700">{caseData?.category || "-"}</p>
                         </div>
@@ -109,7 +112,7 @@ const CaseDetail = ({ caseData, onBack }) => {
                     </div>
 
                     <div className="bg-white p-4 rounded-xl shadow-md border border-gray-300">
-                        <div className="flex items-center">
+                        <div className="flex flex-col sm:flex-row items-center">
                             <label className="font-bold text-gray-700 mr-2">มาตราที่เกี่ยวข้อง :</label>
                             <p className="text-gray-700">{sections ? sections.join(", ") : "-"}</p>
                         </div>
